@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DraftingCompass, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const SignUpPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,30 +14,43 @@ const SignUpPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
+      toast.error("Passwords don't match.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
     setLoading(true);
     setError(null);
-    setSuccess(null);
+    
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
       });
+
       if (error) throw error;
-      setSuccess('Account created! Please check your email to confirm your account if required, then log in.');
+
+      if (data.session) {
+        toast.success('Account created successfully! Welcome!');
+        navigate('/');
+      } else if (data.user) {
+        toast.info('Account created! Please check your email to verify your account.');
+      } else {
+        toast.error('An unexpected error occurred during sign up.');
+      }
+
     } catch (error: any) {
       setError(error.message || 'Failed to sign up. Please try again.');
+      toast.error(error.message || 'Failed to sign up. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -92,7 +106,6 @@ const SignUpPage: React.FC = () => {
               />
             </div>
             {error && <p className="text-sm text-error bg-error/10 p-2 rounded-md">{error}</p>}
-            {success && <p className="text-sm text-success bg-success/10 p-2 rounded-md">{success}</p>}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
               {loading ? 'Creating Account...' : 'Sign Up'}
             </Button>

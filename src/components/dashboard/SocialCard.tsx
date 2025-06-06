@@ -2,16 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { MessageSquareHeart, Users, Smile } from 'lucide-react';
+import { MessageSquareHeart, Smile } from 'lucide-react';
 import { SocialMission, Log, PrescriptiveSystemKey } from '@/types';
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 
 interface SocialCardProps {
   currentDate: Date;
   onLogChange: (log: Omit<Log, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   initialLog?: Log | null;
-  // We'll manage recently completed missions within the component or a higher-level state if needed for persistence across sessions beyond just today.
-  // For MVP, we'll pick one based on date to ensure it changes daily but is consistent for the same day.
 }
 
 const MISSIONS: SocialMission[] = [
@@ -44,7 +42,7 @@ const SocialCard: React.FC<SocialCardProps> = ({ currentDate, onLogChange, initi
   const currentMission = useMemo(() => {
     // Use day of year to cycle through missions, ensuring it's consistent for the day
     // but changes daily.
-    const dayOfYear = parseInt(format(currentDate, 'D')); // Day of year (1-366)
+    const dayOfYear = getDayOfYear(currentDate); // Use getDayOfYear for a robust, clear solution.
     return MISSIONS[dayOfYear % MISSIONS.length];
   }, [currentDate]);
 

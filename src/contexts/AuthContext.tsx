@@ -33,21 +33,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        if (!session) {
-          navigate('/login');
-        }
       }
     );
 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
     navigate('/login');
   };
 
