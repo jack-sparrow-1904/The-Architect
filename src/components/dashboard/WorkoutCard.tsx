@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Dumbbell, Coffee, CalendarCheck2 } from 'lucide-react';
+import { Dumbbell, Coffee, CalendarCheck2, CheckCircle2 } from 'lucide-react';
 import { Workout, Log, PrescriptiveSystemKey } from '@/types';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 interface WorkoutCardProps {
   currentDate: Date;
@@ -13,7 +15,7 @@ interface WorkoutCardProps {
 }
 
 const WORKOUT_A: Workout = {
-  name: "Workout A: Strength Focus",
+  name: "Strength Focus",
   exercises: [
     { name: "Squats", sets: "3", reps: "5-8" },
     { name: "Bench Press", sets: "3", reps: "5-8" },
@@ -22,7 +24,7 @@ const WORKOUT_A: Workout = {
 };
 
 const WORKOUT_B: Workout = {
-  name: "Workout B: Power & Core",
+  name: "Power &amp; Core",
   exercises: [
     { name: "Squats", sets: "3", reps: "5-8" },
     { name: "Overhead Press", sets: "3", reps: "5-8" },
@@ -33,12 +35,7 @@ const WORKOUT_B: Workout = {
 const PRESCRIPTIVE_KEY: PrescriptiveSystemKey = 'WORKOUT';
 
 const WorkoutCard: React.FC<WorkoutCardProps> = ({ currentDate, onLogChange, initialLog }) => {
-  const [isCompleted, setIsCompleted] = useState(!!initialLog?.value_boolean);
   const dayOfWeek = currentDate.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
-
-  useEffect(() => {
-    setIsCompleted(!!initialLog?.value_boolean);
-  }, [initialLog]);
 
   const getWorkoutForDay = (): Workout | null => {
     if (dayOfWeek === 1 || dayOfWeek === 5) return WORKOUT_A; // Monday, Friday
@@ -47,57 +44,108 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({ currentDate, onLogChange, ini
   };
 
   const currentWorkout = getWorkoutForDay();
+  const [checkedExercises, setCheckedExercises] = useState<Set<string>>(new Set());
 
-  const handleCheckboxChange = async (checked: boolean) => {
-    setIsCompleted(checked);
-    await onLogChange({
-      prescriptive_system_key: PRESCRIPTIVE_KEY,
-      log_date: format(currentDate, 'yyyy-MM-dd'),
-      value_boolean: checked,
-      value_numeric: null, // Not applicable for this binary tracker
+  const isCompleted = currentWorkout ? checkedExercises.size === currentWorkout.exercises.length : false;
+  const progress = currentWorkout ? (checkedExercises.size / currentWorkout.exercises.length) * 100 : 0;
+
+  useEffect(() => {
+    // Initialize state based on the log from the database
+    if (initialLog?.value_boolean && currentWorkout) {
+      setCheckedExercises(new Set(currentWorkout.exercises.map(ex => ex.name)));
+    } else {
+      setCheckedExercises(new Set());
+    }
+  }, [initialLog, currentWorkout]);
+
+  useEffect(() => {
+    // This effect triggers the database update when the completion status changes.
+    const wasInitiallyCompleted = !!initialLog?.value_boolean;
+    if (isCompleted !== wasInitiallyCompleted) {
+      onLogChange({
+        prescriptive_system_key: PRESCRIPTIVE_KEY,
+        log_date: format(currentDate, 'yyyy-MM-dd'),
+        value_boolean: isCompleted,
+        value_numeric: null,
+      });
+    }
+  }, [isCompleted, initialLog, onLogChange, currentDate]);
+
+  const handleExerciseCheckChange = (exerciseName: string, checked: boolean) => {
+    setCheckedExercises(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(exerciseName);
+      } else {
+        newSet.delete(exerciseName);
+      }
+      return newSet;
     });
   };
 
   return (
-    <Card className="bg-surface/70 border-border shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xl font-semibold text-text">
-          {currentWorkout ? `Today's Workout: ${currentWorkout.name}` : "Rest Day"}
-        </CardTitle>
+    <Card className={cn(
+      "bg-surface/70 border-border shadow-lg hover:shadow-xl transition-all duration-300",
+      isCompleted && "border-primary shadow-primary/20"
+    )}>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <div>
+          <CardTitle className="text-xl font-semibold text-text">
+            {currentWorkout ? `Workout: ${currentWorkout.name}` : "Rest Day"}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            {currentWorkout ? "Check off exercises as you complete them." : "Active recovery or full rest."}
+          </CardDescription>
+        </div>
         {currentWorkout ? <Dumbbell className="h-6 w-6 text-primary" /> : <Coffee className="h-6 w-6 text-secondary" />}
       </CardHeader>
       <CardContent>
         {currentWorkout ? (
           <div className="space-y-4">
-            <ul className="space-y-2 text-sm text-textSecondary">
+            <ul className="space-y-3 text-sm text-textSecondary">
               {currentWorkout.exercises.map((ex, index) => (
-                <li key={index} className="flex justify-between">
-                  <span>{ex.name}</span>
-                  <span className="font-medium">{ex.sets} sets of {ex.reps} reps</span>
+                <li key={index} className="flex items-center space-x-3">
+                  <Checkbox
+                    id={`ex-${index}`}
+                    checked={checkedExercises.has(ex.name)}
+                    onCheckedChange={(checked) => handleExerciseCheckChange(ex.name, Boolean(checked))}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  />
+                  <Label 
+                    htmlFor={`ex-${index}`} 
+                    className={cn(
+                      "flex justify-between w-full transition-colors",
+                      checkedExercises.has(ex.name) && "text-muted-foreground line-through"
+                    )}
+                  >
+                    <span>{ex.name}</span>
+                    <span className="font-medium text-text">{ex.sets} x {ex.reps}</span>
+                  </Label>
                 </li>
               ))}
             </ul>
-            <div className="flex items-center space-x-2 pt-4 border-t border-border/50">
-              <Checkbox
-                id="workout-completed"
-                checked={isCompleted}
-                onCheckedChange={(checked) => handleCheckboxChange(Boolean(checked))}
-                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-              />
-              <Label htmlFor="workout-completed" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-text">
-                I did it!
-              </Label>
+            <div className="pt-4 border-t border-border/50">
+              {isCompleted ? (
+                 <div className="flex items-center text-primary font-medium">
+                   <CheckCircle2 className="h-5 w-5 mr-2"/>
+                   <span>Completed! Great work.</span>
+                 </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label className="text-xs text-muted-foreground">Progress</Label>
+                    <span className="text-xs font-semibold text-primary">{checkedExercises.size} / {currentWorkout.exercises.length}</span>
+                  </div>
+                  <Progress value={progress} className="h-2 [&>*]:bg-primary" />
+                </div>
+              )}
             </div>
           </div>
         ) : (
           <p className="text-sm text-textSecondary">
-            Active recovery: go for a walk or do some light stretching. Enjoy your rest!
+            Enjoy your rest! Go for a walk, stretch, or just relax.
           </p>
         )}
-        <CardDescription className="text-xs text-textSecondary/70 pt-3 flex items-center">
-          <CalendarCheck2 className="h-3 w-3 mr-1" />
-          Consistency is key. Keep showing up!
-        </CardDescription>
       </CardContent>
     </Card>
   );
