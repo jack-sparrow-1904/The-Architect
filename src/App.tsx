@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import DashboardPage from './pages/DashboardPage';
+import WeeklyReviewPage from './pages/WeeklyReviewPage';
 import { Toaster } from "@/components/ui/sonner"
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/" element={<ProtectedRoute />}>
             <Route index element={<DashboardPage />} />
-            {/* Add other protected routes here if needed */}
+            <Route path="weekly-review" element={<WeeklyReviewPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" />} /> 
         </Routes>

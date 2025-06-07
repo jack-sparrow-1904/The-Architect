@@ -7,37 +7,52 @@ export interface System {
 }
 
 export interface Log {
-  id?: string;
-  system_id?: string | null; // Nullable for prescriptive systems
-  user_id: string;
-  log_date: string; // YYYY-MM-DD
-  value_numeric?: number | null;
-  value_boolean?: boolean | null;
-  prescriptive_system_key?: string | null; // e.g., 'WORKOUT', 'READING'
-  created_at?: string;
-}
-
-export type PrescriptiveSystemKey = 'WORKOUT' | 'READING' | 'DIET' | 'SOCIAL';
-
-export interface Workout {
-  name: string;
-  exercises: { name: string; sets: string; reps: string }[];
-}
-
-export interface DietMeal {
-  name: string;
-  imageUrl: string;
-  ingredients: string[];
-}
-
-export interface SocialMission {
   id: string;
-  description: string;
+  system_id: string | null;
+  user_id: string;
+  log_date: string;
+  value_numeric: number | null;
+  value_boolean: boolean | null;
+  prescriptive_system_key: string | null;
+  created_at: string;
 }
 
-// For daily logs, combining prescriptive and custom
-export interface DailyLog extends Log {
-  // For custom systems
-  system_name?: string; 
-  tracker_type?: 'BINARY' | 'NUMERIC';
-}
+export type Vision = {
+  id: string;
+  user_id: string;
+  higher_self: string | null;
+  core_values: string[];
+  long_term_goals: Goal[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type Goal = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export type WeeklyReview = {
+  id: string;
+  user_id: string;
+  week_start_date: string; // ISO date string
+  wins: string[];
+  challenges: string[];
+  learnings: string[];
+  next_week_focus: string | null;
+  rating: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ActionItem = {
+  id: string;
+  user_id: string;
+  weekly_review_id: string | null;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  due_date: string | null; // ISO date string
+  created_at: string;
+  updated_at: string;
+};

@@ -21,9 +21,9 @@ The central hub of the application. It presents a clean, date-focused view of yo
 
 ### 2. Prescriptive Systems (The "Big Four")
 These are four non-negotiable daily habits prescribed by the app to build a foundation for well-being.
--   **💪 Workout:** A simple binary tracker for daily physical activity.
+-   **💪 Workout:** An interactive card that prescribes a specific workout (e.g., Workout A or B on alternating days) with a checklist of exercises. A progress bar tracks completion, providing clear visual feedback.
 -   **📖 Reading:** A binary tracker to encourage daily learning.
--   **🥗 Diet:** A binary tracker for maintaining a clean diet.
+-   **🥗 Diet:** Instead of a simple checkbox, the app suggests a specific healthy meal for the day, complete with an image and ingredient list. Users can shuffle for a new idea, offering both guidance and flexibility.
 -   **🤝 Social Mission:** A unique, daily rotating challenge to improve social skills and build connections.
 
 ### 3. Custom Systems

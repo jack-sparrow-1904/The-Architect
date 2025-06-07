@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, CalendarIcon, ChevronLeft, ChevronRight, Settings, UserCircle, DraftingCompass } from 'lucide-react';
+import { LogOut, CalendarIcon, ChevronLeft, ChevronRight, Settings, UserCircle, DraftingCompass, BookOpenCheck } from 'lucide-react';
 import { format, addDays, subDays, startOfDay } from 'date-fns';
 import { useDailyLogs } from '@/hooks/useDailyLogs';
 import { Log, System } from '@/types';
@@ -107,9 +108,17 @@ const DashboardPage: React.FC = () => {
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
-          <Button onClick={goToToday} variant="outline" className="border-border hover:bg-muted/50 text-sm">
-            Go to Today
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={goToToday} variant="outline" className="border-border hover:bg-muted/50 text-sm">
+              Go to Today
+            </Button>
+            <Button asChild variant="outline" className="border-border hover:bg-muted/50 text-sm">
+              <Link to="/weekly-review">
+                <BookOpenCheck className="mr-2 h-4 w-4" />
+                Weekly Review
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
       
